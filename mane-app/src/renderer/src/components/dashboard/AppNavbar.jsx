@@ -554,8 +554,8 @@ export default function AppNavbar() {
     const [modalOpen, setModalOpen] = useState(false)
     const [toast, setToast] = useState(null) // { msg, type }
 
-    const handleLogout = () => {
-        logout()
+    const handleLogout = async () => {
+        await logout()
         navigate('/')
     }
 

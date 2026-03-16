@@ -74,8 +74,14 @@ export default function ProfilePage() {
     const totalFocus = useAppStore((s) => s.totalFocus)
     const sessionCount = useAppStore((s) => s.sessionCount)
     const logout = useAppStore((s) => s.logout)
+    const navigate = useNavigate()
 
     if (!user) return null
+
+    const handleLogout = async () => {
+        await logout()
+        navigate('/', { replace: true })
+    }
 
     const totalFocusSec = totalFocus * 60
     const level = getLevel(totalFocusSec)
@@ -144,7 +150,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* ── Çıkış ───────────────────────────────── */}
-                    <button onClick={logout}
+                    <button onClick={handleLogout}
                         className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all duration-200"
                         style={{
                             border: '2px solid rgba(220,80,60,0.30)',

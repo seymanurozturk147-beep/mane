@@ -96,12 +96,21 @@ const useAppStore = create(
             },
 
             logout: async () => {
-                const { leaveRoom } = get()
-                await leaveRoom() // Odadan çık
+                try {
+                    const { leaveRoom } = get()
+                    await leaveRoom() // Odadan çık
+                } catch (e) {
+                    console.warn("[Logout] Odadan çıkış hatası:", e)
+                }
+                
                 await clearSession()
-                set({ user: null, isAuthenticated: true, notifications: [], friends: [], activeRoom: null })
-                // Not: isAuthenticated'ı false yapmayı unutma
-                set({ isAuthenticated: false })
+                set({ 
+                    user: null, 
+                    isAuthenticated: false, 
+                    notifications: [], 
+                    friends: [], 
+                    activeRoom: null 
+                })
             },
 
 
