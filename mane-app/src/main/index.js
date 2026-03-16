@@ -54,88 +54,90 @@ function createMainWindow(splashStartTime = Date.now()) {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       contextIsolation: true,
+      devTools: true // Geliştirme için açık
     }
   })
 
-  // ─── Kural 2: Tüm renderer hatalarını yakala ─────────────────────────────
-  mainWindow.webContents.on('did-fail-load', (_e, code, desc) => {
-    console.log('[MANE] Yükleme hatası:', code, desc)
-  })
-  mainWindow.webContents.on('render-process-gone', (_e, details) => {
-    console.log('[MANE] React çöktü! Sebep:', details.reason, '| ExitCode:', details.exitCode)
-  })
-  mainWindow.webContents.on('unresponsive', () => {
-    console.log('[MANE] Renderer yanıt vermiyor!')
+  // ─── Hata Yakalama ───────────────────────────────────────────────────────
+  mainWindow.webContents.on('did-fail-load', (_, code, desc) => {
+    console.error(`[Main] Yükleme hatası: ${code} - ${desc}`)
   })
 
-  // ─── Geçiş: toplam 5 saniye splash garantisi ─────────────────────────────
-  // ready-to-show tetiklenince kalan süreyi hesapla; mainWindow.show() ÖNCE,
-  // splashWindow.close() SONRA çalışır — bu sıra window-all-closed'ı önler.
+  // ─── Geçiş Mantığı ───────────────────────────────────────────────────────
+  // Pencere hazır olduğunda splash'i kapatıp ana pencereyi göster.
+  // 5 saniye bekleme süresini 3 saniyeye çekelim (kullanıcıyı çok bekletmeyelim).
   mainWindow.once('ready-to-show', () => {
     const elapsed = Date.now() - splashStartTime
-    const remainingTime = Math.max(5000 - elapsed, 0)
-    console.log(`[MANE] ready-to-show — elapsed: ${elapsed}ms, beklenen: ${remainingTime}ms`)
+    const wait = Math.max(3000 - elapsed, 0)
+    
+    console.log(`[Main] Pencere hazır. Geçen: ${elapsed}ms, Ek: ${wait}ms`)
 
     setTimeout(() => {
       if (!mainWindow || mainWindow.isDestroyed()) return
       
+      // Önce ana pencereyi göster
       mainWindow.show()
       
-      // splash kapatma — mainWindow gösterildikten sonra
+      // Sonra splash'i imha et
       if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.hide() // Önce gizle
         splashWindow.close()
-        // splashWindow = null // GC'ye yardım et
+        splashWindow = null
       }
       
       mainWindow.focus()
-      console.log('[MANE] mainWindow gösterildi ve odaklandı')
-    }, remainingTime)
+      
+      if (is.dev) {
+        mainWindow.webContents.openDevTools({ mode: 'detach' })
+      }
+    }, wait)
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // ─── URL Yükleme (.catch ile güvenli) ────────────────────────────────────
+  // URL Yükleme
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-      .catch(err => console.log('[MANE] Vite bağlantısı bekleniyor...', err.message))
+    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']).catch(err => {
+      console.error('[Main] Dev servera bağlanılamadı:', err.message)
+    })
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
-      .catch(err => console.log('[MANE] index.html yüklenemedi:', err.message))
+    mainWindow.loadFile(join(__dirname, '../renderer/index.html')).catch(err => {
+      console.error('[Main] HTML dosyası yüklenemedi:', err.message)
+    })
   }
 }
 
 // ─── Uygulama Hazır ──────────────────────────────────────────────────────────
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.electron')
+  // macOS için Dock kimliği
+  if (process.platform === 'darwin') {
+    app.setAboutPanelOptions({
+      applicationName: 'MANE',
+      applicationVersion: '1.0.4'
+    })
+  }
+
+  electronApp.setAppUserModelId('com.electron.mane')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.on('ping', () => console.log('pong'))
-
-  const splashStartTime = createSplashWindow()
-  createMainWindow(splashStartTime)
+  // Başlat
+  const st = createSplashWindow()
+  createMainWindow(st)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      const st = createSplashWindow()
-      createMainWindow(st)
+      createMainWindow()
     }
   })
 })
 
 app.on('window-all-closed', () => {
-  console.log('[MANE] Tüm pencereler kapatıldı')
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-// Yakalanamayan hataları logla
 process.on('uncaughtException', (err) => {
-  console.error('[MANE] Beklenmedik hata (Main):', err)
+  console.error('[Main] Kritik Hata:', err)
 })
