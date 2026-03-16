@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import AppNavbar from '../components/dashboard/AppNavbar'
 import useAppStore from '../store/useAppStore'
 
