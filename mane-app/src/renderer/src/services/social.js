@@ -9,7 +9,8 @@ import {
     orderBy,
     deleteDoc,
     serverTimestamp,
-    setDoc
+    setDoc,
+    getDocs
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -41,11 +42,22 @@ export function listenToNotifications(userId, callback) {
     );
 
     return onSnapshot(q, (snapshot) => {
-        const notifs = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
-        }));
+        const notifs = snapshot.docs.map(doc => {
+            const data = doc.data();
+            let createdAt = new Date().toISOString();
+            
+            if (data.createdAt) {
+                // Server timestamp henüz gelmemiş olabilir (local event)
+                createdAt = data.createdAt.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString();
+            }
+
+            return {
+                id: doc.id,
+                ...data,
+                createdAt
+            };
+        });
+        console.log(`[Social] ${notifs.length} bildirim alındı.`);
         callback(notifs);
     }, (error) => {
         console.error("[Social] Bildirim dinleme hatası:", error);
@@ -66,6 +78,7 @@ export async function deleteNotification(notifId) {
 
 // ─── Arkadaşlık İsteği Gönder ────────────────────────────────────────────────
 export async function createFriendRequest(fromUser, toUser) {
+    console.log(`[Social] Arkadaşlık isteği gönderiliyor: ${fromUser.displayName} -> ${toUser.displayName} (${toUser.id})`);
     return sendFirestoreNotification({
         type: 'friend_request',
         fromId: fromUser.id,
