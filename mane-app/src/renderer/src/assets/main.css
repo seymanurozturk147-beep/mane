@@ -1,0 +1,71 @@
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';
+@import '@fontsource/poppins/800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans text-brown bg-cream;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Electron drag region */
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-orange hover:bg-orange-dark text-white font-semibold px-6 py-2.5 rounded-full shadow-btn transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 no-drag;
+  }
+
+  .btn-outline {
+    @apply bg-white border border-brown/20 text-brown font-semibold px-6 py-2.5 rounded-full shadow-card transition-all duration-200 hover:border-orange hover:text-orange hover:-translate-y-0.5 no-drag;
+  }
+
+  .feature-card {
+    background: linear-gradient(135deg, #FDEBD0 0%, #FDDCB0 100%);
+    box-shadow: 0 6px 24px rgba(160, 80, 20, 0.14), 0 2px 8px rgba(160, 80, 20, 0.08);
+    border: 2px solid rgba(230, 130, 60, 0.30);
+    @apply rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 cursor-default;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-cream-dark rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-orange-light;
+}

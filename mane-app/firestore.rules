@@ -1,0 +1,15 @@
+rules_version='2'
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.time < timestamp.date(2026, 4, 15);
+    }
+    match /rooms/{roomId} {
+      allow read, write: if request.time < timestamp.date(2026, 4, 15);
+    }
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2026, 4, 15);
+    }
+  }
+}

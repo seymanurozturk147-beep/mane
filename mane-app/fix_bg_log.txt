@@ -1,0 +1,7 @@
+Asset dir: C:\Users\Şeyma Nur\Desktop\Mane\mane-app\src\renderer\src\assets
+Source   : C:\Users\Şeyma Nur\Desktop\Mane\mane-app\src\renderer\src\assets\babaanne.png
+Exists   : true
+Jimp loaded OK
+Image size: 640 x 640
+Backup created
+DONE! 640x640 white background applied
